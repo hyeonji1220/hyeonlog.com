@@ -75,6 +75,7 @@ function filterUnpublished(recordMap: ExtendedRecordMap): ExtendedRecordMap {
 function hideProperties(recordMap: ExtendedRecordMap): ExtendedRecordMap {
   const collectionView = recordMap.collection_view as Record<string, any>
   const collection = recordMap.collection as Record<string, any>
+  const block = recordMap.block as Record<string, any>
 
   // 숨길 속성의 property key 수집 (컬렉션별로 이름 → key 매핑)
   const hiddenKeysByCollection: Record<string, Set<string>> = {}
@@ -87,12 +88,11 @@ function hideProperties(recordMap: ExtendedRecordMap): ExtendedRecordMap {
     if (keys.size > 0) hiddenKeysByCollection[collId] = keys
   }
 
-  // 각 뷰의 *_properties에서 해당 key를 visible: false 처리
+  // 1. 각 뷰의 *_properties에서 visible: false 처리
   for (const [, cv] of Object.entries(collectionView ?? {})) {
     const view = cv?.value?.value
     if (!view) continue
 
-    // 이 뷰가 속한 컬렉션 찾기
     const collId = Object.keys(hiddenKeysByCollection).find(id =>
       id === view.parent_id?.replace(/-/g, '')
     )
@@ -106,6 +106,23 @@ function hideProperties(recordMap: ExtendedRecordMap): ExtendedRecordMap {
         if (hiddenKeys.has(prop.property)) prop.visible = false
       }
     }
+  }
+
+  // 2. 컬렉션 스키마에서 제거 (개별 페이지 속성 표시 방지)
+  for (const [collId, coll] of Object.entries(collection ?? {})) {
+    const schema = coll?.value?.value?.schema
+    if (!schema) continue
+    const hiddenKeys = hiddenKeysByCollection[collId]
+    if (!hiddenKeys) continue
+    for (const key of hiddenKeys) delete schema[key]
+  }
+
+  // 3. 각 블록의 properties에서도 제거
+  const allHiddenKeys = new Set(Object.values(hiddenKeysByCollection).flatMap(s => [...s]))
+  for (const b of Object.values(block ?? {})) {
+    const props = b?.value?.value?.properties
+    if (!props) continue
+    for (const key of allHiddenKeys) delete props[key]
   }
 
   return recordMap
@@ -161,8 +178,8 @@ function applyCollectionSorts(recordMap: ExtendedRecordMap): ExtendedRecordMap {
 
 export async function getPage(pageId: string): Promise<ExtendedRecordMap> {
   const recordMap = await notion.getPage(pageId)
-  hideProperties(recordMap)
-  filterUnpublished(recordMap)
+  filterUnpublished(recordMap)  // 필터링 먼저
+  hideProperties(recordMap)     // 뷰 컬럼에서 숨기기 + 스키마/블록에서 제거
   return applyCollectionSorts(recordMap)
 }
 
