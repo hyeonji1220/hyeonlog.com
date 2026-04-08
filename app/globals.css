@@ -1,2 +1,23 @@
 * { box-sizing: border-box; }
 body { margin: 0; }
+
+/* 데이터베이스 테이블이 부모 컬럼 밖으로 튀어나오는 문제 방지 */
+.notion-collection {
+  align-self: stretch !important;
+  max-width: 100% !important;
+}
+
+.notion-table {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* box-sizing: border-box 전역 설정과 충돌 방지 (라이브러리가 content-box 가정) */
+.notion-table-view {
+  box-sizing: content-box !important;
+}
+
+/* 데이터베이스 테이블 행의 페이지 아이콘 숨기기 */
+.notion-table-cell-title .notion-page-icon-inline {
+  display: none;
+}

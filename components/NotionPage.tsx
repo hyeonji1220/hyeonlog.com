@@ -22,6 +22,15 @@ interface Props {
 const mapPageUrl = (pageId: string) =>
   `/posts/${pageId.replace(/-/g, '')}`
 
+async function searchNotion(params: { query: string; ancestorId?: string }) {
+  const res = await fetch('/api/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: params.query }),
+  })
+  return res.json()
+}
+
 export default function NotionPage({ recordMap, rootPageId }: Props) {
   return (
     <NotionRenderer
@@ -30,6 +39,7 @@ export default function NotionPage({ recordMap, rootPageId }: Props) {
       darkMode={false}
       rootPageId={rootPageId}
       mapPageUrl={mapPageUrl}
+      searchNotion={searchNotion}
       components={{ Code, Collection, Equation }}
     />
   )
