@@ -128,6 +128,75 @@ function hideProperties(recordMap: ExtendedRecordMap): ExtendedRecordMap {
   return recordMap
 }
 
+function matchesFilter(block: any, filter: any): boolean {
+  const { operator, filters, property, filter: condition } = filter
+
+  // Compound filter (AND / OR)
+  if (Array.isArray(filters)) {
+    const results = filters.map((f: any) => matchesFilter(block, f))
+    if (operator === 'and') return results.every(Boolean)
+    if (operator === 'or') return results.some(Boolean)
+    return true
+  }
+
+  // Leaf filter
+  if (!property || !condition) return true
+
+  const propValue = block?.properties?.[property]
+  const { operator: op, value } = condition
+
+  if (op === 'checkbox_is') {
+    const checked = propValue?.[0]?.[0] === 'Yes'
+    return checked === (value?.value === true)
+  }
+
+  if (op === 'enum_is') {
+    const actual = propValue?.[0]?.[0] ?? ''
+    return actual === (value?.value ?? value)
+  }
+
+  if (op === 'enum_contains') {
+    const actual = propValue?.[0]?.[0] ?? ''
+    const targets: string[] = Array.isArray(value)
+      ? value.map((v: any) => v?.value ?? v)
+      : [value?.value ?? value]
+    return targets.includes(actual)
+  }
+
+  // Unsupported operator (e.g. date_is_within) — include by default
+  return true
+}
+
+function applyCollectionFilters(recordMap: ExtendedRecordMap): ExtendedRecordMap {
+  const collectionQuery = recordMap.collection_query as Record<string, Record<string, any>>
+  const collectionView = recordMap.collection_view as Record<string, any>
+  const block = recordMap.block as Record<string, any>
+
+  for (const [, viewQueries] of Object.entries(collectionQuery ?? {})) {
+    for (const [viewId, cq] of Object.entries(viewQueries ?? {})) {
+      const filter = collectionView?.[viewId]?.value?.value?.query2?.filter
+      if (!filter?.filters?.length) continue
+
+      const blockIds: string[] =
+        cq?.collection_group_results?.blockIds ?? cq?.blockIds ?? []
+      if (blockIds.length === 0) continue
+
+      const filtered = blockIds.filter((id: string) => {
+        const b = block[id]?.value?.value
+        return matchesFilter(b, filter)
+      })
+
+      if (cq.collection_group_results) {
+        cq.collection_group_results.blockIds = filtered
+      } else {
+        cq.blockIds = filtered
+      }
+    }
+  }
+
+  return recordMap
+}
+
 function applyCollectionSorts(recordMap: ExtendedRecordMap): ExtendedRecordMap {
   const collectionQuery = recordMap.collection_query as Record<string, Record<string, any>>
   const collectionView = recordMap.collection_view as Record<string, any>
@@ -178,8 +247,9 @@ function applyCollectionSorts(recordMap: ExtendedRecordMap): ExtendedRecordMap {
 
 export async function getPage(pageId: string): Promise<ExtendedRecordMap> {
   const recordMap = await notion.getPage(pageId)
-  filterUnpublished(recordMap)  // 필터링 먼저
-  hideProperties(recordMap)     // 뷰 컬럼에서 숨기기 + 스키마/블록에서 제거
+  filterUnpublished(recordMap)      // Published 필터 (Published 키가 schema에 있는 동안)
+  applyCollectionFilters(recordMap) // 뷰별 필터 (type, category 등)
+  hideProperties(recordMap)         // 뷰 컬럼/스키마/블록에서 숨기기
   return applyCollectionSorts(recordMap)
 }
 
