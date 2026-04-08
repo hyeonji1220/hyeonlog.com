@@ -4,7 +4,7 @@ import Giscus from '@giscus/react'
 
 export default function GiscusComments() {
   return (
-    <div style={{ maxWidth: 900, margin: '40px auto', padding: '0 24px' }}>
+    <div style={{ maxWidth: 720, margin: '40px auto', padding: '0 16px' }}>
       <Giscus
         repo="hyeonji1220/hyeonlog.com"
         repoId={process.env.NEXT_PUBLIC_GISCUS_REPO_ID!}

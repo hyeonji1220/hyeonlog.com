@@ -17,7 +17,8 @@ body { margin: 0; }
   box-sizing: content-box !important;
 }
 
-/* 데이터베이스 테이블 행의 페이지 아이콘 숨기기 */
-.notion-table-cell-title .notion-page-icon-inline {
+/* 데이터베이스 테이블/갤러리 행의 페이지 아이콘 숨기기 */
+.notion-table-cell-title .notion-page-icon-inline,
+.notion-gallery-grid .notion-page-icon-inline {
   display: none;
 }
