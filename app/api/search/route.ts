@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   const results = await notion.search({
     query,
     ancestorId: DATABASE_PAGE_ID,
-    filters: { isDeletedOnly: false, excludeTemplates: true, navigableBlockContentOnly: true },
+    filters: { isDeletedOnly: false, excludeTemplates: true, isNavigableOnly: true, requireEditPermissions: false },
     limit: 20,
   })
 
