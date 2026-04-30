@@ -7,8 +7,9 @@ import type { ExtendedRecordMap } from 'notion-types'
 const Code = dynamic(() =>
   import('react-notion-x/build/third-party/code').then(m => m.Code)
 )
-const Collection = dynamic(() =>
-  import('react-notion-x/build/third-party/collection').then(m => m.Collection)
+const Collection = dynamic(
+  () => import('react-notion-x/build/third-party/collection').then(m => m.Collection),
+  { ssr: false } // GracefulImage isBrowser 체크로 인한 hydration mismatch 방지
 )
 const Equation = dynamic(() =>
   import('react-notion-x/build/third-party/equation').then(m => m.Equation)

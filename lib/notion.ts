@@ -128,6 +128,11 @@ function hideProperties(recordMap: ExtendedRecordMap): ExtendedRecordMap {
   return recordMap
 }
 
+/** date property 값에서 "YYYY-MM-DD" 추출 */
+function extractDateString(propValue: any): string | null {
+  return propValue?.[0]?.[1]?.[0]?.[1]?.start_date ?? null
+}
+
 function matchesFilter(block: any, filter: any): boolean {
   const { operator, filters, property, filter: condition } = filter
 
@@ -151,19 +156,54 @@ function matchesFilter(block: any, filter: any): boolean {
   }
 
   if (op === 'enum_is') {
-    const actual = propValue?.[0]?.[0] ?? ''
-    return actual === (value?.value ?? value)
+    const raw = propValue?.[0]?.[0] ?? ''
+    const actual = raw.split(',').map((v: string) => v.trim())
+    const target = value?.value ?? value
+    return actual.includes(target)
   }
 
   if (op === 'enum_contains') {
-    const actual = propValue?.[0]?.[0] ?? ''
+    const raw = propValue?.[0]?.[0] ?? ''
+    // multi_select은 콤마로 구분된 문자열로 저장됨
+    const actual = raw.split(',').map((v: string) => v.trim())
     const targets: string[] = Array.isArray(value)
       ? value.map((v: any) => v?.value ?? v)
       : [value?.value ?? value]
-    return targets.includes(actual)
+    return targets.some(t => actual.includes(t))
   }
 
-  // Unsupported operator (e.g. date_is_within) — include by default
+  if (op === 'date_is_after') {
+    const propDate = extractDateString(propValue)
+    const filterDate = value?.value?.start_date ?? null
+    if (!propDate || !filterDate) return false
+    return propDate > filterDate
+  }
+
+  if (op === 'date_is_before') {
+    const propDate = extractDateString(propValue)
+    const filterDate = value?.value?.start_date ?? null
+    if (!propDate || !filterDate) return false
+    return propDate < filterDate
+  }
+
+  if (op === 'date_is_within') {
+    const propDate = extractDateString(propValue)
+    const startDate = value?.value?.start_date ?? null
+    const endDate = value?.value?.end_date ?? null
+    if (!propDate) return false
+    if (startDate && propDate < startDate) return false
+    if (endDate && propDate > endDate) return false
+    return true
+  }
+
+  if (op === 'date_is') {
+    const propDate = extractDateString(propValue)
+    const filterDate = value?.value?.start_date ?? null
+    if (!propDate || !filterDate) return false
+    return propDate === filterDate
+  }
+
+  // 미지원 operator — 기본 포함
   return true
 }
 
@@ -245,11 +285,45 @@ function applyCollectionSorts(recordMap: ExtendedRecordMap): ExtendedRecordMap {
   return recordMap
 }
 
+/**
+ * place 타입 property 값에서 plain text만 남기고 annotation 제거.
+ * react-notion-x가 place 타입을 지원하지 않아 raw annotation이 그대로 렌더링되는 문제 방지.
+ */
+function normalizePlaceProperties(recordMap: ExtendedRecordMap): ExtendedRecordMap {
+  const collection = recordMap.collection as Record<string, any>
+  const block = recordMap.block as Record<string, any>
+
+  const placeKeys = new Set<string>()
+  for (const coll of Object.values(collection ?? {})) {
+    const schema = coll?.value?.value?.schema ?? {}
+    for (const [key, field] of Object.entries(schema as Record<string, any>)) {
+      if (field.type === 'place') placeKeys.add(key)
+    }
+  }
+  if (placeKeys.size === 0) return recordMap
+
+  for (const b of Object.values(block ?? {})) {
+    const props = b?.value?.value?.properties
+    if (!props) continue
+    for (const key of placeKeys) {
+      if (!props[key]) continue
+      // Notion rich text: [[text, annotations?], ...] — annotation 제거해 plain text만 유지
+      const text: string = (props[key] as any[])
+        .filter((chunk: any) => typeof chunk[0] === 'string')
+        .map((chunk: any) => chunk[0])
+        .join('')
+      props[key] = text ? [[text]] : []
+    }
+  }
+  return recordMap
+}
+
 export async function getPage(pageId: string): Promise<ExtendedRecordMap> {
   const recordMap = await notion.getPage(pageId)
-  filterUnpublished(recordMap)      // Published 필터 (Published 키가 schema에 있는 동안)
-  applyCollectionFilters(recordMap) // 뷰별 필터 (type, category 등)
-  hideProperties(recordMap)         // 뷰 컬럼/스키마/블록에서 숨기기
+  filterUnpublished(recordMap)        // Published 필터
+  applyCollectionFilters(recordMap)   // 뷰별 필터 (type, tag, date 등)
+  normalizePlaceProperties(recordMap) // place 타입 plain text 변환
+  hideProperties(recordMap)           // 뷰 컬럼/스키마/블록에서 숨기기
   return applyCollectionSorts(recordMap)
 }
 

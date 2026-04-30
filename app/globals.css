@@ -22,3 +22,57 @@ body { margin: 0; }
 .notion-gallery-grid .notion-page-icon-inline {
   display: none;
 }
+
+/* 유튜브/링크 mention 카드의 브라우저 기본 링크 스타일 제거 */
+.notion-link-mention-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* 포스트 제목 회색 밑줄 제거 (relation property 제외) */
+.notion-page-text,
+.notion-page-title-text {
+  border-bottom: none;
+}
+.notion-collection-row-property .notion-property-relation .notion-page-title-text {
+  border-bottom: 1px solid;
+}
+
+/* ────── Notion 웹 스타일: list/table hover ────── */
+
+/* List view: 행 hover 배경 + Open 인디케이터 */
+.notion-list-item {
+  border-radius: 3px;
+  transition: background 120ms ease-in;
+  padding: 2px 6px;
+}
+.notion-list-item:hover {
+  background: rgba(55, 53, 47, 0.04);
+}
+.notion-list-item::after {
+  content: 'Open ↗';
+  font-size: 11px;
+  color: rgba(55, 53, 47, 0.4);
+  flex-shrink: 0;
+  padding-left: 10px;
+  opacity: 0;
+  transition: opacity 150ms ease-in;
+  white-space: nowrap;
+}
+.notion-list-item:hover::after {
+  opacity: 1;
+}
+
+/* Table view: 행 hover 배경 + 커서 */
+.notion-table-row {
+  cursor: pointer;
+  transition: background 120ms ease-in;
+}
+.notion-table-row:hover {
+  background: rgba(55, 53, 47, 0.04);
+}
+
+/* Table header: 배경 추가 (Notion 웹 스타일) */
+.notion-table-header-inner {
+  background: rgba(247, 246, 245, 0.8);
+}
