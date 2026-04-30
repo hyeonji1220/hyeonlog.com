@@ -7,9 +7,14 @@ import type { ExtendedRecordMap } from 'notion-types'
 const Code = dynamic(() =>
   import('react-notion-x/build/third-party/code').then(m => m.Code)
 )
-const Collection = dynamic(
+// 홈 페이지용 — SSR 유지 (Google이 포스트 목록 링크를 초기 HTML에서 읽을 수 있음)
+const CollectionSSR = dynamic(() =>
+  import('react-notion-x/build/third-party/collection').then(m => m.Collection)
+)
+// 포스트 페이지용 — CSR (GracefulImage의 isBrowser 체크로 인한 hydration mismatch 방지)
+const CollectionCSR = dynamic(
   () => import('react-notion-x/build/third-party/collection').then(m => m.Collection),
-  { ssr: false } // GracefulImage isBrowser 체크로 인한 hydration mismatch 방지
+  { ssr: false }
 )
 const Equation = dynamic(() =>
   import('react-notion-x/build/third-party/equation').then(m => m.Equation)
@@ -18,6 +23,7 @@ const Equation = dynamic(() =>
 interface Props {
   recordMap: ExtendedRecordMap
   rootPageId: string
+  clientOnlyCollection?: boolean
 }
 
 const mapPageUrl = (pageId: string) =>
@@ -32,7 +38,8 @@ async function searchNotion(params: { query: string; ancestorId?: string }) {
   return res.json()
 }
 
-export default function NotionPage({ recordMap, rootPageId }: Props) {
+export default function NotionPage({ recordMap, rootPageId, clientOnlyCollection = false }: Props) {
+  const Collection = clientOnlyCollection ? CollectionCSR : CollectionSSR
   return (
     <NotionRenderer
       recordMap={recordMap}

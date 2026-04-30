@@ -1,4 +1,4 @@
-import { getPage } from '@/lib/notion'
+import { getPage, getPageDescription } from '@/lib/notion'
 import { getBlockTitle } from 'notion-utils'
 import NotionPage from '@/components/NotionPage'
 import GiscusComments from '@/components/GiscusComments'
@@ -14,7 +14,18 @@ export async function generateMetadata(
   const block = recordMap.block[id]?.value
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const title = block ? getBlockTitle(block as any, recordMap) : 'hyeonlog'
-  return { title: `${title} | hyeonlog` }
+  const description = getPageDescription(recordMap, id)
+
+  return {
+    title,
+    description: description || undefined,
+    openGraph: {
+      title,
+      description: description || undefined,
+      type: 'article',
+      url: `https://hyeonlog.com/posts/${id}`,
+    },
+  }
 }
 
 export default async function PostPage(
@@ -28,6 +39,7 @@ export default async function PostPage(
       <NotionPage
         recordMap={recordMap}
         rootPageId={id}
+        clientOnlyCollection
       />
       <GiscusComments />
     </>

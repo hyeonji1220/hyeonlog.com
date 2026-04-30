@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { NotionAPI } from 'notion-client'
 import type { ExtendedRecordMap } from 'notion-types'
 
@@ -318,14 +319,39 @@ function normalizePlaceProperties(recordMap: ExtendedRecordMap): ExtendedRecordM
   return recordMap
 }
 
-export async function getPage(pageId: string): Promise<ExtendedRecordMap> {
+/** 포스트 본문 첫 번째 텍스트 블록에서 meta description용 plain text 추출 (최대 160자) */
+export function getPageDescription(recordMap: ExtendedRecordMap, pageId: string): string {
+  const blockMap = recordMap.block as Record<string, any>
+
+  // notion URL은 dash 없는 ID를 쓰지만 block map 키는 dash 포함일 수 있음
+  const normId = pageId.replace(/-/g, '')
+  const pageBlock =
+    blockMap[normId]?.value?.value ??
+    blockMap[pageId]?.value?.value
+  const childIds: string[] = pageBlock?.content ?? []
+
+  for (const childId of childIds) {
+    const child = blockMap[childId]?.value?.value
+    if (!child) continue
+    if (child.type !== 'text') continue
+    const text: string = (child.properties?.title ?? [])
+      .filter((chunk: any) => typeof chunk[0] === 'string')
+      .map((chunk: any) => chunk[0] as string)
+      .join('')
+      .trim()
+    if (text.length > 10) return text.slice(0, 160)
+  }
+  return ''
+}
+
+export const getPage = cache(async (pageId: string): Promise<ExtendedRecordMap> => {
   const recordMap = await notion.getPage(pageId)
   filterUnpublished(recordMap)        // Published 필터
   applyCollectionFilters(recordMap)   // 뷰별 필터 (type, tag, date 등)
   normalizePlaceProperties(recordMap) // place 타입 plain text 변환
   hideProperties(recordMap)           // 뷰 컬럼/스키마/블록에서 숨기기
   return applyCollectionSorts(recordMap)
-}
+})
 
 export async function getPostIds(): Promise<string[]> {
   const recordMap = await getPage(DATABASE_PAGE_ID)
