@@ -356,9 +356,9 @@ export const getPage = cache(async (pageId: string): Promise<ExtendedRecordMap> 
 export async function getPostIds(): Promise<string[]> {
   // hideProperties()가 Published 스키마/프로퍼티를 삭제하기 전의 raw 데이터 필요
   const recordMap = await notion.getPage(DATABASE_PAGE_ID)
-  const databaseId = DATABASE_PAGE_ID.replace(/-/g, '')
 
   const collection = recordMap.collection as Record<string, any>
+  const collectionQuery = recordMap.collection_query as Record<string, Record<string, any>>
   const block = recordMap.block as Record<string, any>
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -371,12 +371,19 @@ export async function getPostIds(): Promise<string[]> {
   const schema = (postsCollection as any)?.value?.value?.schema ?? {}
   const publishedKey = findPropertyKey(schema, PUBLISHED_PROPERTY_NAME)
 
-  return Object.keys(block).filter(id => {
+  // collection_query의 blockIds를 모든 뷰에서 합산 (parent_id 비교 우회)
+  const candidateIds = new Set<string>()
+  for (const viewQueries of Object.values(collectionQuery ?? {})) {
+    for (const cq of Object.values(viewQueries ?? {})) {
+      const ids: string[] = cq?.collection_group_results?.blockIds ?? cq?.blockIds ?? []
+      for (const id of ids) candidateIds.add(id)
+    }
+  }
+
+  return [...candidateIds].filter(id => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const b = (block[id] as any)?.value?.value
-    const parentId = b?.parent_id?.replace(/-/g, '') ?? ''
-    if (b?.type !== 'page' || parentId !== databaseId) return false
-
+    if (!b) return false
     if (!publishedKey) return true
     return b?.properties?.[publishedKey]?.[0]?.[0] === 'Yes'
   })
