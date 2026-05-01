@@ -23,7 +23,7 @@ export async function generateMetadata(
       title,
       description: description || undefined,
       type: 'article',
-      url: `https://hyeonlog.com/posts/${id}`,
+      url: `https://hyeonlog-com.vercel.app/posts/${id}`,
     },
   }
 }

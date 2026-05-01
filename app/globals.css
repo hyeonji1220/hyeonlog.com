@@ -38,9 +38,7 @@ body { margin: 0; }
   border-bottom: 1px solid;
 }
 
-/* ────── Notion 웹 스타일: list/table hover ────── */
-
-/* List view: 행 hover 배경 + Open 인디케이터 */
+/* ────── List view: 행 hover 배경 + Open 인디케이터 ────── */
 .notion-list-item {
   border-radius: 3px;
   transition: background 120ms ease-in;
@@ -63,16 +61,142 @@ body { margin: 0; }
   opacity: 1;
 }
 
-/* Table view: 행 hover 배경 + 커서 */
+/* ────────────────────────────────────────────────────────
+   Notion 테이블 뷰 — 노션 웹 100% 일치 스타일
+   ──────────────────────────────────────────────────────── */
+
+/* 1. 전체 폰트 */
+.notion-table,
+.notion-table-header-inner,
+.notion-table-body,
+.notion-table-row,
+.notion-table-cell,
+.notion-collection-column-title {
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Inter", "Apple SD Gothic Neo", Helvetica, Arial, sans-serif;
+}
+
+/* 2. 헤더: 외곽 테두리 제거, 하단 구분선만 남기기 */
+.notion-table-header-inner {
+  border-top: none !important;
+  border-bottom: 1px solid rgb(233, 233, 231) !important;
+  background: transparent !important;
+}
+
+/* 3. 헤더 높이 및 패딩 */
+.notion-table-view-header-cell {
+  height: 36px !important;
+}
+.notion-table-header {
+  height: 36px !important;
+}
+.notion-table-header-placeholder {
+  height: 37px !important;
+}
+.notion-table-view-header-cell-inner {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  border-right: none !important;
+  align-items: center !important;
+}
+
+/* 4. 헤더 텍스트 — 연하게, 작게 */
+.notion-collection-column-title {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: rgba(55, 53, 47, 0.65) !important;
+}
+.notion-collection-column-title-icon {
+  fill: rgba(55, 53, 47, 0.45) !important;
+  width: 12px !important;
+  height: 12px !important;
+  min-width: 12px !important;
+  min-height: 12px !important;
+  margin-right: 5px !important;
+}
+
+/* 5. 행(Row): 외곽선 제거, 하단 구분선만, hover 배경 */
 .notion-table-row {
+  border-bottom: 1px solid rgb(233, 233, 231) !important;
+  border-top: none !important;
+  align-items: stretch !important;
   cursor: pointer;
   transition: background 120ms ease-in;
 }
 .notion-table-row:hover {
-  background: rgba(55, 53, 47, 0.04);
+  background: rgba(55, 53, 47, 0.04) !important;
 }
 
-/* Table header: 배경 추가 (Notion 웹 스타일) */
-.notion-table-header-inner {
-  background: rgba(247, 246, 245, 0.8);
+/* 6. 셀: 외곽선 제거, 패딩 확장, 세로 중앙 정렬 */
+.notion-table-cell {
+  border-right: none !important;
+  border-top: none !important;
+  padding: 8px 16px !important;
+  min-height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  font-size: 14px !important;
+  overflow: hidden;
+}
+
+/* 7. 제목 셀: overflow visible (OPEN 버튼 표시용) */
+.notion-table-cell-title {
+  overflow: visible !important;
+  font-weight: 500 !important;
+}
+
+/* 8. 제목 링크 */
+.notion-table-cell-title .notion-page-link {
+  display: flex !important;
+  align-items: center !important;
+  text-decoration: none !important;
+  color: rgb(55, 53, 47) !important;
+  overflow: visible !important;
+  white-space: nowrap;
+}
+
+/* 9. 제목 텍스트 색상 */
+.notion-table-cell-title .notion-page-title-text {
+  color: rgb(55, 53, 47) !important;
+  font-weight: 500 !important;
+}
+
+/* 10. OPEN 버튼: hover 시 제목 오른쪽에 나타남 */
+.notion-table-row:hover .notion-table-cell-title .notion-page-link::after {
+  content: 'OPEN';
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: 10px;
+  padding: 1px 8px;
+  border: 1px solid rgba(55, 53, 47, 0.2);
+  border-radius: 4px;
+  background: #ffffff;
+  color: rgba(55, 53, 47, 0.55);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+
+/* 11. 날짜 / 기타 프로퍼티 셀: 연한 회색 */
+.notion-table-cell-text,
+.notion-table-cell-created_time,
+.notion-table-cell-last_edited_time,
+.notion-table-cell-date,
+.notion-table-cell-number,
+.notion-table-cell-select,
+.notion-table-cell-multi_select,
+.notion-table-cell-url,
+.notion-table-cell-email,
+.notion-table-cell-phone_number,
+.notion-table-cell-checkbox {
+  color: rgba(25, 23, 17, 0.6) !important;
+  font-size: 13px !important;
+}
+
+/* 12. 이모지 + 텍스트 간격 */
+.notion-page-title-text {
+  gap: 4px;
 }

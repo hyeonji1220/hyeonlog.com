@@ -3,6 +3,6 @@ import type { MetadataRoute } from 'next'
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: { userAgent: '*', allow: '/' },
-    sitemap: 'https://hyeonlog.com/sitemap.xml',
+    sitemap: 'https://hyeonlog-com.vercel.app/sitemap.xml',
   }
 }

@@ -8,11 +8,11 @@ export const metadata: Metadata = {
     template: '%s | hyeonlog',
   },
   description: '베를린에서 살며 배운 것들을 기록합니다. 여행, 일상, 그리고 생각.',
-  metadataBase: new URL('https://hyeonlog.com'),
+  metadataBase: new URL('https://hyeonlog-com.vercel.app'),
   openGraph: {
     type: 'website',
     locale: 'ko_KR',
-    url: 'https://hyeonlog.com',
+    url: 'https://hyeonlog-com.vercel.app',
     siteName: 'hyeonlog',
     title: 'hyeonlog',
     description: '베를린에서 살며 배운 것들을 기록합니다. 여행, 일상, 그리고 생각.',
