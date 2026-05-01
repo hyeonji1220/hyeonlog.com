@@ -361,11 +361,14 @@ export async function getPostIds(): Promise<string[]> {
   const collection = recordMap.collection as Record<string, any>
   const block = recordMap.block as Record<string, any>
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const postsCollection = Object.values(collection ?? {}).find((c: any) => {
-    const schema = c?.value?.value?.schema ?? {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const schema = (c as any)?.value?.value?.schema ?? {}
     return findPropertyKey(schema, PUBLISHED_PROPERTY_NAME) !== null
   })
-  const schema = postsCollection?.value?.value?.schema ?? {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const schema = (postsCollection as any)?.value?.value?.schema ?? {}
   const publishedKey = findPropertyKey(schema, PUBLISHED_PROPERTY_NAME)
 
   return Object.keys(block).filter(id => {
