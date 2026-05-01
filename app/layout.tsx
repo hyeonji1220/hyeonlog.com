@@ -22,6 +22,9 @@ export const metadata: Metadata = {
     title: 'hyeonlog',
     description: '베를린에서 살며 배운 것들을 기록합니다.',
   },
+  verification: {
+    google: 'nE7uKdl_qS5xt0EM1lgkhESspA10lIdY7oWbmsDiTTE',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
